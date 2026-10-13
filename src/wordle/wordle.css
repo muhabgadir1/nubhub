@@ -1,0 +1,415 @@
+/* ═══════════════════════════════════════════════════════════
+   WordNUB.
+
+   RummiNUB's room and typography; the board keeps the three
+   colours the game is actually played with, warmed to sit on
+   cream and crimson rather than on white.
+
+   Sized for a laptop: the tile is as big as the window allows
+   up to 84px, and the whole board is centred in what is left
+   between the header and the keyboard.
+   ═══════════════════════════════════════════════════════════ */
+
+.wd {
+  --green:  #2fa862;   /* right letter, right place */
+  --yellow: #c99a2e;   /* right letter, wrong place */
+  --grey:   #55392a;   /* ruled out — a dark warm brown, not a cold grey */
+
+  --tile-empty:  rgba(244,233,206,.26);   /* outline of an empty tile */
+  --tile-filled: rgba(244,233,206,.5);    /* once you type into it */
+  --key-bg:      rgba(244,233,206,.13);
+  --key-text:    var(--cream-text);
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Orange and blue rather than green and yellow — the two colours the game
+   depends on are the exact pair red-green colour blindness merges. */
+.wd--contrast { --green: #e0722c; --yellow: #6f93d8; }
+
+/* ---------- header ---------- */
+
+.wd-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  border-bottom: 1px solid rgba(255,255,255,.09);
+  background: rgba(10,1,3,.35);
+}
+.wd-header__side { flex: 1 1 0; display: flex; align-items: center; gap: 8px; }
+.wd-header__side--right { justify-content: flex-end; }
+.wd-title {
+  font-family: var(--font-slab);
+  font-weight: 800;
+  font-size: clamp(22px, 2.6vw, 32px);
+  letter-spacing: .04em;
+  color: var(--cream-text);
+  margin: 0;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 rgba(0,0,0,.4);
+}
+.wd-title em { font-style: normal; color: var(--red-banner); }
+
+/* ---------- board ---------- */
+
+.wd-boardwrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 0;
+  padding: 16px;
+}
+.wd-loading {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  letter-spacing: .3px;
+  color: var(--cream-text);
+  opacity: .55;
+  white-space: nowrap;
+  animation: wd-breathe 1.6s ease-in-out infinite;
+}
+@keyframes wd-breathe { 50% { opacity: .95; } }
+
+.wd-board {
+  /* The tile grows to fill whatever the keyboard and header leave behind,
+     up to 84px. Sizing the tile rather than the board is what keeps every
+     tile exactly square at any window height. */
+  --gap: 8px;
+  /* Three ceilings, whichever bites first: a comfortable maximum, the height
+     left between header and keyboard, and the width the row needs. `--cols` is
+     set from the word length, so a ten-letter board shrinks its tiles instead
+     of running off the side of the screen. */
+  --tile: min(
+    84px,
+    calc((100dvh - 400px - var(--badge-safe)) / 6),
+    calc((100vw - 64px - (var(--cols) - 1) * var(--gap)) / var(--cols))
+  );
+  perspective: 1400px;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 5), var(--tile));
+  grid-template-rows: repeat(6, var(--tile));
+  gap: var(--gap);
+}
+.wd-row { display: contents; }
+.wd-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-slab);
+  font-size: calc(var(--tile) * .52);
+  line-height: 1;
+  font-weight: 800;
+  text-transform: uppercase;
+  user-select: none;
+  box-sizing: border-box;
+  border: 2px solid var(--tile-empty);
+  border-radius: 8px;
+  background: rgba(255,255,255,.02);
+  color: var(--cream-text);
+  transition: border-color .12s ease, background .12s ease;
+}
+.wd-tile--filled {
+  border-color: var(--tile-filled);
+  background: rgba(255,255,255,.05);
+  animation: wd-pop .13s var(--ease);
+}
+.wd-tile--correct { background: linear-gradient(180deg, #3ac47a, var(--green)); border-color: transparent; color: #05261a; }
+.wd-tile--present { background: linear-gradient(180deg, #dcb04a, var(--yellow)); border-color: transparent; color: #2a1b10; }
+.wd-tile--absent  { background: linear-gradient(180deg, #674634, var(--grey));   border-color: transparent; color: rgba(253,243,216,.7); }
+.wd--contrast .wd-tile--correct { background: linear-gradient(180deg, #f08a45, var(--green)); color: #2a1000; }
+.wd--contrast .wd-tile--present { background: linear-gradient(180deg, #8fabe4, var(--yellow)); color: #08152e; }
+
+@keyframes wd-pop {
+  from { transform: scale(.86); }
+  60%  { transform: scale(1.06); }
+  to   { transform: scale(1); }
+}
+
+/* The reveal: each tile turns edge-on, changes colour where you cannot see it,
+   and turns back. The colour swap is timed from JS at the halfway point.
+   
+   The easing matters more than the duration. `--ease` is a settle curve with
+   overshoot — right for a button, wrong for this, because it throws the tile to
+   edge-on in the first fifth of the animation and then crawls, which reads as a
+   blink rather than a turn. A flip wants to accelerate into the edge and
+   decelerate out of it, so each half gets its own curve. */
+.wd-tile--flip { animation: wd-flip 560ms both; }
+@keyframes wd-flip {
+  0%   { transform: rotateX(0deg);   animation-timing-function: cubic-bezier(.36, 0, .82, .36); }
+  50%  { transform: rotateX(-90deg); animation-timing-function: cubic-bezier(.18, .64, .64, 1); }
+  100% { transform: rotateX(0deg); }
+}
+
+.wd-row--shake .wd-tile { animation: wd-shake .5s var(--ease); }
+@keyframes wd-shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(3px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
+}
+
+.wd-tile--win { animation: wd-bounce .95s var(--ease); }
+@keyframes wd-bounce {
+  0%, 18% { transform: translateY(0); }
+  40%     { transform: translateY(-28px) scale(1.04); }
+  52%     { transform: translateY(4px); }
+  64%     { transform: translateY(-12px); }
+  80%     { transform: translateY(2px); }
+  100%    { transform: translateY(0); }
+}
+
+/* ---------- keyboard ---------- */
+
+.wd-keyboard {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 0 12px 16px;
+  padding-bottom: calc(max(16px, env(safe-area-inset-bottom)) + var(--badge-safe));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  user-select: none;
+}
+.wd-krow { display: flex; gap: 7px; width: 100%; touch-action: manipulation; }
+/* The half-key indents that stagger the middle row, as on a real keyboard. */
+.wd-spacer { flex: .5; }
+.wd-key {
+  flex: 1;
+  height: clamp(48px, 7.2vh, 62px);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 9px;
+  background: var(--key-bg);
+  color: var(--key-text);
+  font-family: var(--font-ui);
+  font-size: clamp(13px, 1.5vw, 16px);
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background-color .16s ease, color .16s ease, transform .1s var(--ease), border-color .16s;
+  box-shadow: inset 0 1px rgba(255,255,255,.08);
+}
+/* Hover only where there is a real pointer. On a touch screen the :hover state
+   sticks after a tap and the key stays lit until you press somewhere else,
+   which looks exactly like a bug. */
+@media (hover: hover) and (pointer: fine) {
+  .wd-key:hover { background: rgba(244,233,206,.2); }
+}
+.wd-key:active { transform: translateY(2px); }
+/* Keyboard users still get a ring; a mouse click does not leave one behind. */
+.wd-key:focus { outline: none; }
+.wd-key:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wd-key--wide { flex: 1.6; font-size: clamp(11px, 1.1vw, 13px); letter-spacing: .5px; }
+.wd-key svg { width: 22px; height: 22px; fill: currentColor; }
+.wd-key--correct { background: linear-gradient(180deg, #3ac47a, var(--green)); color: #05261a; border-color: transparent; }
+.wd-key--present { background: linear-gradient(180deg, #dcb04a, var(--yellow)); color: #2a1b10; border-color: transparent; }
+.wd-key--absent  { background: rgba(0,0,0,.36); color: rgba(253,243,216,.45); border-color: rgba(255,255,255,.04); }
+
+/* ---------- toasts ---------- */
+
+.wd-toasts {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  width: max-content;
+  max-width: 90vw;
+}
+
+/* ---------- modals ---------- */
+
+.wd-answer { text-align: center; font-size: 14px; letter-spacing: .04em; margin-bottom: 14px; }
+.wd-answer strong {
+  display: block;
+  font-family: var(--font-slab);
+  font-size: 30px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-top: 3px;
+  color: var(--red);
+}
+
+/* Miniature rows in the how-to-play card, on cream rather than crimson. */
+.wd-example { display: flex; gap: 5px; margin: 8px 0; }
+.wd-example .wd-tile {
+  width: 44px; height: 44px; font-size: 22px; flex: 0 0 auto;
+  border-color: rgba(42,27,16,.22);
+  background: rgba(0,0,0,.03);
+  color: var(--ink);
+}
+.wd-example__reveal { animation: wd-flip .52s var(--ease) .3s both; }
+
+.wd-stats { display: flex; justify-content: center; margin-bottom: 14px; }
+.wd-stat { flex: 1; text-align: center; }
+.wd-stat__n { font-family: var(--font-slab); font-size: 36px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.wd-stat__label { font-size: 11.5px; line-height: 1.25; padding: 0 4px; opacity: .72; }
+
+.wd-dist { padding: 0 2px; }
+.wd-dist__row { display: flex; align-items: center; gap: 6px; font-size: 14px; height: 22px; margin-bottom: 5px; }
+.wd-dist__n { width: 10px; flex: 0 0 auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.wd-dist__bar {
+  background: rgba(42,27,16,.35);
+  color: var(--cream-text);
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 0 8px;
+  min-width: 26px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  box-sizing: border-box;
+  transition: width .5s var(--ease);
+}
+.wd-dist__bar--current { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); color: var(--accent-ink); }
+
+.wd-share { display: flex; align-items: stretch; gap: 14px; margin-top: 6px; }
+.wd-share__col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.wd-share__col + .wd-share__col { border-left: 1px solid var(--cream-border); padding-left: 14px; }
+.wd-share__label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; opacity: .7; }
+.wd-countdown { font-family: var(--font-slab); font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.wd-rollover {
+  font-size: 10.5px;
+  line-height: 1.35;
+  opacity: .55;
+  text-align: center;
+  margin-top: 3px;
+  max-width: 20ch;
+}
+.wd-sharebtn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px; }
+.wd-sharebtn svg { width: 20px; height: 20px; fill: currentColor; }
+
+/* ---------- settings ---------- */
+
+.wd-setting {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 15px 0; border-bottom: 1px solid var(--cream-border);
+}
+.wd-setting:last-of-type { border-bottom: 0; }
+/* The length picker needs the full width, so its row stacks instead of pairing
+   a label with a control on one line. */
+.wd-setting--stack { flex-direction: column; align-items: stretch; gap: 12px; }
+.wd-lengths { width: 100%; }
+.wd-lengths .nub-seg__opt { font-size: 16px; padding: 10px 0; }
+
+.wd-suggest { width: 100%; margin-top: 18px; }
+
+.wd-field { display: block; margin: 14px 0; }
+.wd-field > span {
+  display: block;
+  font-family: var(--font-slab);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.wd-field em { font-style: normal; font-weight: 400; opacity: .55; }
+.wd-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--cream-light);
+  border: 1px solid var(--cream-border);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-family: var(--font-slab);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 12px 14px;
+  transition: border-color .16s, box-shadow .16s;
+}
+.wd-input:focus {
+  outline: none;
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 3px rgba(52,196,111,.22);
+}
+/* Reserves its own line whether or not there is a complaint, so the button
+   below does not jump as you type. */
+.wd-problem {
+  min-height: 1.3em;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red-dark);
+  margin-top: 2px;
+}
+.wd-setting__name { font-family: var(--font-slab); font-size: 17px; font-weight: 700; }
+.wd-setting__desc { font-size: 12px; opacity: .62; margin-top: 2px; }
+.wd-switch {
+  flex: 0 0 auto; width: 46px; height: 27px; border-radius: 999px;
+  background: rgba(42,27,16,.3); border: 0; position: relative; cursor: pointer; padding: 0;
+  transition: background-color .22s var(--ease);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.18);
+}
+.wd-switch__knob {
+  position: absolute; top: 3px; left: 3px; width: 21px; height: 21px;
+  border-radius: 50%; background: var(--cream-light);
+  transition: transform .26s var(--ease);
+  box-shadow: 0 2px 5px rgba(0,0,0,.35);
+}
+.wd-switch--on { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); }
+.wd-switch--on .wd-switch__knob { transform: translateX(19px); }
+
+/* On a phone the keyboard is load-bearing, so the board gives up the room. */
+@media (max-width: 560px) {
+  .wd-header { padding: 10px 10px; padding-top: max(10px, env(safe-area-inset-top)); gap: 6px; }
+  .wd-header__side { gap: 5px; }
+  .wd-title { font-size: 20px; }
+  .nub-icon { padding: 6px; }
+  .nub-icon svg { width: 20px; height: 20px; }
+
+  .wd-loading {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  letter-spacing: .3px;
+  color: var(--cream-text);
+  opacity: .55;
+  white-space: nowrap;
+  animation: wd-breathe 1.6s ease-in-out infinite;
+}
+@keyframes wd-breathe { 50% { opacity: .95; } }
+
+.wd-board {
+    --gap: 6px;
+    --tile: min(
+      62px,
+      calc((100dvh - 330px - var(--badge-safe)) / 6),
+      calc((100vw - 24px - (var(--cols) - 1) * var(--gap)) / var(--cols))
+    );
+  }
+  /* Must keep the badge clearance the base rule sets — a `padding` shorthand
+     here would silently reset it and put the bottom row back under the badge. */
+  .wd-keyboard { gap: 7px; padding: 0 6px calc(10px + var(--badge-safe)); }
+  .wd-krow { gap: 5px; }
+  .wd-key { height: 52px; border-radius: 7px; }
+}

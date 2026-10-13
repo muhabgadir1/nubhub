@@ -1,0 +1,320 @@
+/* ═══════════════════════════════════════════════════════════
+   MathNUB — twelve rungs, three tries each.
+
+   Same crimson room as the rest of NUBHUB. The one new piece
+   of furniture is the rail across the top: a dot per rung,
+   filling in behind you as you climb.
+   ═══════════════════════════════════════════════════════════ */
+
+.mn {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- header ---------- */
+
+.mn-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  border-bottom: 1px solid rgba(255,255,255,.09);
+  background: rgba(10,1,3,.35);
+}
+.mn-header__side { flex: 1 1 0; display: flex; align-items: center; gap: 8px; }
+.mn-header__side--right { justify-content: flex-end; }
+.mn-title {
+  font-family: var(--font-slab);
+  font-weight: 800;
+  font-size: clamp(22px, 2.6vw, 32px);
+  color: var(--cream-text);
+  margin: 0;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 rgba(0,0,0,.4);
+}
+.mn-title em { font-style: normal; color: var(--red-banner); }
+
+/* ---------- the rail ---------- */
+
+.mn-rail {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  padding: 26px 24px 6px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.mn-rung { display: flex; align-items: center; flex: 1 1 0; min-width: 0; }
+.mn-rung:last-child { flex: 0 0 auto; }
+.mn-rung__wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 0 0 auto; }
+.mn-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: rgba(244,233,206,.14);
+  border: 1.5px solid rgba(244,233,206,.24);
+  box-sizing: border-box;
+  /* The dot grows and fills as you reach it, so the rail reads as progress
+     rather than as twelve identical circles. */
+  transition: background .35s var(--ease), border-color .35s var(--ease),
+              transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.mn-dot--done {
+  background: linear-gradient(180deg, #3ed08a, var(--accent-dark));
+  border-color: transparent;
+  box-shadow: 0 0 10px rgba(52,196,111,.5);
+}
+.mn-dot--now {
+  transform: scale(1.5);
+  background: var(--cream-text);
+  border-color: var(--cream-text);
+  box-shadow: 0 0 0 4px rgba(253,243,216,.14), 0 0 16px rgba(253,243,216,.4);
+  animation: mn-pulse 2s ease-in-out infinite;
+}
+@keyframes mn-pulse {
+  50% { box-shadow: 0 0 0 8px rgba(253,243,216,.06), 0 0 22px rgba(253,243,216,.55); }
+}
+.mn-dot--failed {
+  background: linear-gradient(180deg, #e8544b, var(--red-dark));
+  border-color: transparent;
+  transform: scale(1.35);
+  box-shadow: 0 0 14px rgba(200,16,46,.6);
+}
+.mn-rung__label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(253,243,216,.4);
+  transition: color .3s ease;
+}
+.mn-rung__label--now { color: var(--cream-text); }
+.mn-rung__label--done { color: rgba(52,196,111,.85); }
+
+/* The connector fills left-to-right as each rung is cleared. */
+.mn-link {
+  flex: 1 1 auto;
+  height: 2px;
+  margin: 0 5px;
+  margin-bottom: 22px;
+  background: rgba(244,233,206,.14);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  min-width: 6px;
+}
+.mn-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--accent-dark), var(--accent));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .5s var(--ease);
+}
+.mn-link--done::after { transform: scaleX(1); }
+
+/* ---------- the question ---------- */
+
+.mn-main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 10px 16px calc(28px + var(--badge-safe));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.mn-card {
+  padding: 26px 22px;
+  text-align: center;
+  animation: mn-in .42s var(--ease) both;
+}
+/* Each rung arrives from the right, so climbing feels like moving along the
+   rail rather than the text being swapped out underneath you. */
+@keyframes mn-in {
+  from { opacity: 0; transform: translateX(34px) scale(.97); }
+}
+.mn-card--right { animation: mn-right .5s var(--ease); }
+@keyframes mn-right {
+  40% { transform: scale(1.03); box-shadow: 0 0 0 4px rgba(52,196,111,.5), 0 12px 30px rgba(0,0,0,.4); }
+}
+.mn-card--wrong { animation: mn-shake .45s var(--ease); }
+@keyframes mn-shake {
+  10%, 90% { transform: translateX(-3px); }
+  20%, 80% { transform: translateX(5px); }
+  30%, 50%, 70% { transform: translateX(-9px); }
+  40%, 60% { transform: translateX(9px); }
+}
+
+.mn-level {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+.mn-topic { font-size: 13px; opacity: .6; margin-bottom: 18px; }
+.mn-prompt {
+  font-family: var(--font-slab);
+  font-weight: 700;
+  font-size: clamp(21px, 3.4vw, 30px);
+  line-height: 1.4;
+  margin: 0 0 6px;
+  /* Prompts carry ×, ÷, √, π and superscripts; keep the spacing the generator
+     put in rather than collapsing it. */
+  white-space: pre-wrap;
+}
+.mn-note { font-size: 12.5px; opacity: .6; font-style: italic; margin-top: 10px; }
+
+/* ---------- answering ---------- */
+
+.mn-answer { display: flex; gap: 10px; align-items: stretch; }
+.mn-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--cream-light);
+  border: 1px solid var(--cream-border);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-family: var(--font-slab);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-align: center;
+  padding: 14px 12px;
+  box-sizing: border-box;
+  transition: border-color .16s, box-shadow .16s;
+}
+.mn-input:focus { outline: none; border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(52,196,111,.22); }
+.mn-input:disabled { opacity: .55; }
+.mn-submit { flex: 0 0 auto; min-width: 116px; }
+
+/* The pad exists because a phone keyboard has no π, √ or superscripts, and
+   asking someone to hunt for them is asking them to give up. */
+.mn-pad { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+.mn-pad__key {
+  min-width: 44px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(244,233,206,.2);
+  background: rgba(244,233,206,.07);
+  color: var(--cream-text);
+  font-family: var(--font-slab);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .16s, transform .1s var(--ease), border-color .16s;
+}
+@media (hover: hover) and (pointer: fine) {
+  .mn-pad__key:hover { background: rgba(244,233,206,.17); border-color: rgba(244,233,206,.4); }
+}
+.mn-pad__key:active { transform: translateY(2px); }
+
+/* ---------- tries left ---------- */
+
+.mn-tries {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cream-text);
+  opacity: .85;
+  min-height: 22px;
+}
+.mn-try {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f6ecd4, #d8c79c);
+  box-shadow: 0 2px 5px rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.7);
+  transition: transform .34s var(--ease), opacity .34s ease;
+}
+.mn-try--gone { transform: scale(.001); opacity: 0; }
+
+.mn-verdict {
+  text-align: center;
+  font-family: var(--font-slab);
+  font-size: 17px;
+  font-weight: 700;
+  min-height: 24px;
+}
+.mn-verdict--right { color: var(--accent); }
+.mn-verdict--wrong { color: #ff8a80; }
+
+/* ---------- the end of a run ---------- */
+
+.mn-over { text-align: center; }
+.mn-over__answer {
+  font-family: var(--font-slab);
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--red);
+  margin: 6px 0 2px;
+}
+.mn-over__label { font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; opacity: .6; font-weight: 700; }
+
+/* ---------- statistics ---------- */
+
+.mn-stats { display: flex; justify-content: center; margin: 4px 0 12px; }
+.mn-stat { flex: 1; text-align: center; }
+.mn-stat b { display: block; font-family: var(--font-slab); font-size: 32px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.mn-stat span { font-size: 11px; line-height: 1.25; opacity: .72; display: block; padding: 0 3px; }
+.mn-dist { padding: 0 2px; }
+.mn-dist__row { display: flex; align-items: center; gap: 6px; font-size: 12.5px; height: 20px; margin-bottom: 4px; }
+.mn-dist__n { width: 16px; flex: 0 0 auto; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.mn-dist__bar {
+  background: rgba(42,27,16,.35);
+  color: var(--cream-text);
+  font-weight: 700;
+  font-size: 11.5px;
+  padding: 0 7px;
+  min-width: 22px;
+  border-radius: 5px;
+  display: flex; justify-content: flex-end; align-items: center;
+  height: 100%; box-sizing: border-box;
+  transition: width .5s var(--ease);
+}
+.mn-dist__bar--current { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); color: var(--accent-ink); }
+
+.mn-grid { display: inline-flex; flex-direction: column; gap: 4px; margin: 6px 0; }
+.mn-grid__row { display: flex; gap: 4px; }
+.mn-grid__cell { width: 28px; height: 28px; border-radius: 5px; background: rgba(42,27,16,.2); }
+.mn-grid__cell--1 { background: #7fbb56; }
+.mn-grid__cell--2 { background: #e8c65a; }
+.mn-grid__cell--3 { background: #e0913f; }
+.mn-grid__cell--stop { background: #d2453c; }
+
+@media (max-width: 560px) {
+  .mn-header { padding: 10px 10px; padding-top: max(10px, env(safe-area-inset-top)); gap: 6px; }
+  .mn-title { font-size: 20px; }
+  .nub-icon { padding: 6px; }
+  .nub-icon svg { width: 20px; height: 20px; }
+  .mn-rail { padding: 18px 20px 4px; }
+  .mn-dot { width: 11px; height: 11px; }
+  .mn-rung__label { font-size: 9px; }
+  .mn-link { margin: 0 3px 20px; min-width: 3px; }
+  .mn-card { padding: 20px 16px; }
+  .mn-answer { flex-direction: column; }
+  .mn-submit { width: 100%; }
+  .mn-pad__key { min-width: 38px; padding: 8px 10px; font-size: 16px; }
+}

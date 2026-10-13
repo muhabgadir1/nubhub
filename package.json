@@ -1,0 +1,22 @@
+{
+  "name": "nubhub",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "words": "node scripts/build-words.mjs",
+    "test": "node tests/wordle.test.mjs && node tests/connections.test.mjs && node tests/math.test.mjs",
+    "deploy": "npm run build && npx --yes netlify-cli@latest deploy --prod --dir=dist --site b3d2b379-0396-466f-a2aa-70e1549567e5"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.4",
+    "vite": "^8.2.0"
+  }
+}

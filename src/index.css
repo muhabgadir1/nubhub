@@ -1,0 +1,11 @@
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  /* The ground behind the app. Crimson, so an overscroll bounce on a trackpad
+     shows more of the room rather than a strip of white. */
+  background: #1a0206;
+}
+#root { min-height: 100dvh; }
+* { -webkit-tap-highlight-color: transparent; }
+button { font: inherit; }

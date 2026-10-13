@@ -1,0 +1,326 @@
+/* ═══════════════════════════════════════════════════════════
+   ConnectNUB.
+
+   RummiNUB's room and typography. The tiles are the cream the
+   rest of the site is made of, and the four category colours
+   are warmed to sit on it — still unmistakably yellow, green,
+   blue and purple, but no longer the cold pastels that belong
+   on a white page.
+
+   Laid out for a laptop: a 720px board, centred, with tiles
+   tall enough to read at a glance.
+   ═══════════════════════════════════════════════════════════ */
+
+.cx {
+  --l0: #e8c65a;  /* the gentle category */
+  --l1: #7fbb56;
+  --l2: #6f93d8;
+  --l3: #a86fb8;  /* the one with the trick in it */
+
+  --tile:     linear-gradient(180deg, var(--cream-light), var(--cream));
+  --selected: linear-gradient(180deg, #4a3226, #2a1b10);
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- header ---------- */
+
+.cx-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  border-bottom: 1px solid rgba(255,255,255,.09);
+  background: rgba(10,1,3,.35);
+}
+.cx-header__side { flex: 1 1 0; display: flex; align-items: center; gap: 8px; }
+.cx-header__side--right { justify-content: flex-end; }
+.cx-title {
+  font-family: var(--font-slab);
+  font-weight: 800;
+  font-size: clamp(22px, 2.6vw, 32px);
+  letter-spacing: .01em;
+  color: var(--cream-text);
+  margin: 0;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 rgba(0,0,0,.4);
+}
+.cx-title em { font-style: normal; color: var(--red-banner); }
+
+/* ---------- the play area ---------- */
+
+.cx-main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 26px 16px calc(34px + var(--badge-safe));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.cx-instruction {
+  font-family: var(--font-slab);
+  font-size: 17px;
+  margin: 0;
+  text-align: center;
+  color: var(--cream-text);
+  opacity: .8;
+}
+
+.cx-boardwrap { width: 100%; position: relative; }
+/* Solved bands and the remaining grid share one column and one gap, so a row
+   that turns into a band does not shift by a pixel as it does it. */
+.cx-stack { display: flex; flex-direction: column; gap: 9px; }
+.cx-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; width: 100%; }
+
+.cx-tile {
+  height: clamp(76px, 11.5vh, 104px);
+  border: 1px solid var(--cream-border);
+  border-radius: 10px;
+  background: var(--tile);
+  color: var(--ink);
+  font-family: var(--font-slab);
+  font-weight: 800;
+  font-size: clamp(14px, 1.5vw, 19px);
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  overflow: hidden;
+  user-select: none;
+  box-shadow: 0 3px 7px rgba(0,0,0,.32), inset 0 1px rgba(255,255,255,.6);
+  /* Only colour transitions here. The slide sets its own transform transition
+     on the element and clears it on landing, so a blanket `all` would fight it. */
+  transition: background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.cx-tile:hover { box-shadow: 0 5px 12px rgba(0,0,0,.4), inset 0 1px rgba(255,255,255,.6); }
+.cx-tile--selected {
+  background: var(--selected);
+  color: var(--cream-text);
+  border-color: rgba(0,0,0,.5);
+  box-shadow: 0 2px 5px rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.14);
+}
+/* A single word never breaks mid-word; it shrinks instead. */
+.cx-tile { white-space: nowrap; }
+.cx-tile--long { font-size: clamp(12px, 1.2vw, 15px); }
+.cx-tile--tiny { font-size: clamp(10px, 1vw, 13px); letter-spacing: 0; }
+/* A phrase has a space to break at, so it may use two lines and stay bigger. */
+.cx-tile--multi { white-space: normal; line-height: 1.15; }
+/* A lone character is a symbol standing in for a word. Set large, and in a
+   face that actually carries arrows, roots and currency signs — the display
+   serif has holes in it at these code points. */
+.cx-tile--symbol {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(26px, 3.4vw, 38px);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.cx-tile--jump { animation: cx-jump .42s var(--ease); }
+@keyframes cx-jump {
+  0%, 100% { transform: translateY(0); }
+  45%      { transform: translateY(-14px); }
+}
+.cx-tile--wrong { animation: cx-shake .45s var(--ease); }
+@keyframes cx-shake {
+  10%, 90% { transform: translateX(-3px); }
+  20%, 80% { transform: translateX(5px); }
+  30%, 50%, 70% { transform: translateX(-8px); }
+  40%, 60% { transform: translateX(8px); }
+}
+
+/* ---------- a solved category ---------- */
+
+.cx-solved {
+  height: clamp(76px, 11.5vh, 104px);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  color: #2a1b10;
+  box-shadow: 0 4px 12px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.4);
+  animation: cx-reveal .42s var(--ease);
+}
+@keyframes cx-reveal { from { opacity: 0; transform: scale(.94); } }
+.cx-solved--0 { background: linear-gradient(180deg, #f2d675, var(--l0)); }
+.cx-solved--1 { background: linear-gradient(180deg, #93cc68, var(--l1)); }
+.cx-solved--2 { background: linear-gradient(180deg, #84a6e6, var(--l2)); }
+.cx-solved--3 { background: linear-gradient(180deg, #bb85c9, var(--l3)); }
+.cx-solved__name {
+  font-family: var(--font-slab);
+  font-weight: 800;
+  font-size: clamp(14px, 1.5vw, 18px);
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.cx-solved__words {
+  /* The reveal lists symbols as often as words, so it uses the same fallback
+     stack that can render them. */
+  font-family: var(--font-ui), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(12px, 1.3vw, 15px);
+  line-height: 1.35;
+  opacity: .82;
+  margin-top: 2px;
+}
+
+/* ---------- mistakes remaining ---------- */
+
+.cx-mistakes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 26px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  color: var(--cream-text);
+  opacity: .9;
+}
+.cx-dots { display: flex; gap: 9px; }
+.cx-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f6ecd4, #d8c79c);
+  box-shadow: 0 2px 5px rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.7);
+  transition: transform .34s var(--ease), opacity .34s ease, background .34s ease;
+}
+/* A spent life shrinks away rather than vanishing, so you see it go. */
+.cx-dot--gone {
+  transform: scale(.001);
+  opacity: 0;
+}
+
+/* ---------- controls ---------- */
+
+.cx-controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.cx-controls .nub-btn { min-width: 148px; letter-spacing: .4px; }
+.cx-shuffle { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.cx-shuffle svg { width: 18px; height: 18px; fill: currentColor; }
+/* Shuffle spins its icon on the way round, so the button says what it does. */
+.cx-shuffle:active svg { animation: cx-spin .5s var(--ease); }
+@keyframes cx-spin { to { transform: rotate(180deg); } }
+
+/* ---------- toast ---------- */
+
+.cx-toastwrap {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ---------- results ---------- */
+
+.cx-sublabel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  opacity: .6;
+  margin: 14px 0 8px;
+  text-align: center;
+}
+.cx-grid { display: inline-flex; flex-direction: column; gap: 4px; margin: 4px 0; }
+.cx-grid__row { display: flex; gap: 4px; }
+.cx-grid__cell { width: 34px; height: 34px; border-radius: 6px; box-shadow: inset 0 1px rgba(255,255,255,.35); }
+.cx-grid__cell--0 { background: var(--l0); }
+.cx-grid__cell--1 { background: var(--l1); }
+.cx-grid__cell--2 { background: var(--l2); }
+.cx-grid__cell--3 { background: var(--l3); }
+.cx-countdown {
+  font-family: var(--font-slab);
+  font-size: 30px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.cx-stats { display: flex; justify-content: center; margin: 4px 0 10px; }
+.cx-stat { flex: 1; text-align: center; }
+.cx-stat b { display: block; font-family: var(--font-slab); font-size: 32px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.cx-stat span { font-size: 11px; line-height: 1.25; opacity: .72; display: block; padding: 0 3px; }
+
+/* Perfect puzzles get their own line, the way the game this copies does it —
+   it is the number people actually brag about. */
+.cx-perfect {
+  text-align: center;
+  padding: 12px 0;
+  margin-bottom: 4px;
+  border-top: 1px solid var(--cream-border);
+  border-bottom: 1px solid var(--cream-border);
+}
+.cx-perfect b { display: block; font-family: var(--font-slab); font-size: 30px; font-weight: 800; line-height: 1.1; }
+.cx-perfect span { font-size: 12px; opacity: .72; }
+
+.cx-dist { padding: 0 2px; }
+.cx-dist__row { display: flex; align-items: center; gap: 6px; font-size: 13px; height: 22px; margin-bottom: 5px; }
+.cx-dist__n { width: 10px; flex: 0 0 auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cx-dist__bar {
+  background: rgba(42,27,16,.35);
+  color: var(--cream-text);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 0 8px;
+  min-width: 24px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  box-sizing: border-box;
+  transition: width .5s var(--ease);
+}
+.cx-dist__bar--current { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); color: var(--accent-ink); }
+
+.cx-rollover { font-size: 11.5px; opacity: .55; text-align: center; margin-top: 4px; }
+.cx-share { width: 100%; margin-top: 14px; }
+.cx-modal-center { text-align: center; }
+
+/* Miniature swatches for the how-to-play card. */
+.cx-swatches { display: flex; gap: 7px; justify-content: center; margin: 12px 0; }
+.cx-swatch { width: 62px; height: 28px; border-radius: 6px; }
+
+@media (max-width: 620px) {
+  .cx-header { padding: 10px 10px; padding-top: max(10px, env(safe-area-inset-top)); gap: 6px; }
+  .cx-header__side { gap: 5px; }
+  .cx-title { font-size: 20px; }
+  .nub-icon { padding: 6px; }
+  .nub-icon svg { width: 20px; height: 20px; }
+
+  .cx-main { padding: 16px 10px calc(24px + var(--badge-safe)); gap: 14px; }
+  .cx-board, .cx-stack { gap: 7px; }
+  .cx-tile, .cx-solved { height: 74px; border-radius: 8px; }
+  /* Three buttons across a phone. They must stay one line each: a wrapped
+     label makes its button taller than the two beside it. */
+  .cx-controls { gap: 7px; width: 100%; flex-wrap: nowrap; }
+  .cx-controls .nub-btn { min-width: 0; flex: 1 1 0; padding: 12px 6px; font-size: 13.5px; white-space: nowrap; }
+  .cx-shuffle { gap: 5px; }
+  .cx-mistakes { font-size: 13px; gap: 8px; }
+}

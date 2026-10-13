@@ -1,0 +1,384 @@
+/* ═══════════════════════════════════════════════════════════
+   The NUBHUB house style.
+
+   Every value here is lifted from RummiNUB's production build
+   (rumminub.netlify.app), so the four screens are one site
+   rather than four that happen to be linked. Nothing in this
+   file is invented: the crimson, the cream, the segmented
+   control and its sliding pill, the easing curves and the
+   button gradients are the ones already shipping.
+
+   Games override only what is theirs — a Wordle tile has to be
+   green, a Connections category has to be purple. Everything
+   around them comes from here.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* --- the dark red room everything sits in --- */
+  --crimson-core: #6b0a1a;
+  --crimson-deep: #1a0206;
+
+  /* --- red: banners, secondary buttons --- */
+  --red:        #c8102e;
+  --red-light:  #e23a54;
+  --red-dark:   #a80e2c;
+  --red-banner: #d8163a;
+
+  /* --- cream paper: cards, inputs, tiles --- */
+  --cream:        #f4e9ce;
+  --cream-light:  #fffdf6;
+  --cream-border: #c7ae7e;
+  --cream-text:   #fdf3d8;
+  --ink:          #2a1b10;
+  --ink-soft:     #2a1b109e;  /* inactive segment text */
+
+  /* --- green: the go button, the active segment --- */
+  --accent:      #34c46f;
+  --accent-dark: #1c8c4a;
+  --accent-ink:  #05261a;
+  --play-green:   #34c46f;
+  --play-green-d: #1c8c4a;
+
+  --radius:    10px;
+  --radius-lg: 16px;
+
+  --font:       -apple-system, "SF Pro Text", system-ui, sans-serif;
+  --font-slab:  "Source Serif 4", "Times New Roman", Times, serif;
+  --font-ui:    "Archivo", -apple-system, system-ui, sans-serif;
+  --font-round: "Arial Rounded MT Bold", "SF Pro Rounded", ui-rounded, -apple-system, sans-serif;
+
+  /* One easing everywhere. A settle with a touch of overshoot is what makes
+     RummiNUB's controls feel sprung rather than merely animated. */
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --ease-pill: cubic-bezier(.34, 1.3, .4, 1);
+
+  /* Netlify pins a "Powered by Netlify" badge to the bottom-right of every
+     page on this plan. It is a fixed iframe at z-index 2147483645, so nothing
+     can be layered over it and no stacking context will move it — the only
+     answer is to keep content out from under it. 202x64 in practice; 72px of
+     clearance covers it with a margin. */
+  --badge-safe: 0px;
+}
+
+/* Above this width the badge sits in an empty corner: content is centred and
+   never reaches the right edge. Below it, centred content grows wide enough to
+   run underneath, so the space has to be reserved. */
+@media (max-width: 1200px) {
+  :root { --badge-safe: 72px; }
+}
+
+/* A tapped button keeps :hover on a touch screen until something else is
+   tapped, so every hover rule on the site is gated on a real pointer. */
+@media (hover: none) {
+  .nub-btn:hover, .nub-btn--ghost:hover, .nub-btn--outline:hover,
+  .nub-icon:hover, .nub-back:hover, .nub-backpill:hover,
+  .nub-seg__opt:hover, .nub-win__btn:hover, .nub-modal__close:hover {
+    background: inherit;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* The room itself — three layers over crimson, exactly as the lobby does it:
+   a vertical darkening, a vignette, then the deep base underneath. RummiNUB
+   puts a portrait between them; that one is its own, so NUBHUB keeps the
+   light and leaves the face out. */
+.nub-room {
+  background:
+    linear-gradient(to bottom, #0a01034d 0%, #0a01031a 40%, #0a0103b8 100%),
+    radial-gradient(ellipse at 50% 45%, rgba(107,10,26,.55) 0%, transparent 62%),
+    radial-gradient(ellipse at 50% 45%, transparent 40%, #0a01038c 100%),
+    var(--crimson-deep);
+  background-attachment: fixed;
+  color: var(--cream-text);
+  font-family: var(--font-ui);
+}
+
+/* ---------- cards ---------- */
+
+.nub-card {
+  background: var(--cream);
+  border: 1px solid var(--cream-border);
+  border-radius: var(--radius-lg);
+  color: var(--ink);
+  box-sizing: border-box;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+
+/* ---------- buttons ---------- */
+
+.nub-btn {
+  background: linear-gradient(180deg, var(--red-light), var(--red));
+  color: var(--cream-text);
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: none;
+  padding: 13px 18px;
+  font-family: var(--font-slab);
+  font-size: 16px;
+  font-weight: 700;
+  transition: transform .14s var(--ease), box-shadow .18s var(--ease), filter .18s;
+  box-shadow: 0 3px 10px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.28);
+}
+.nub-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); }
+.nub-btn:active:not(:disabled) { transform: translateY(1px); }
+.nub-btn:disabled { cursor: default; opacity: .45; }
+
+/* The green one. Same gradient and glow as RummiNUB's Play. */
+.nub-btn--go {
+  background: linear-gradient(160deg, #5be39b 0%, var(--play-green) 45%, var(--play-green-d) 100%);
+  color: var(--accent-ink);
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.42),
+    inset 0 0 0 1px rgba(255,255,255,.35),
+    inset 0 2px rgba(255,255,255,.55),
+    inset 0 -4px rgba(0,0,0,.18),
+    0 0 28px rgba(52,196,111,.3);
+}
+
+/* The quiet button, for actions that sit on the crimson rather than on cream:
+   an outline in the cream the rest of the site is made of. Dark ink would be
+   invisible here, which is the whole reason this is a separate variant. */
+.nub-btn--ghost {
+  background: rgba(244,233,206,.07);
+  color: var(--cream-text);
+  border: 1px solid rgba(244,233,206,.28);
+  box-shadow: inset 0 1px rgba(255,255,255,.08);
+}
+.nub-btn--ghost:hover:not(:disabled) {
+  background: rgba(244,233,206,.15);
+  border-color: rgba(244,233,206,.45);
+}
+/* Disabled has to stay legible — a control you cannot read is one you keep
+   trying to press. Dim it, but not below readable. */
+.nub-btn--ghost:disabled { opacity: 1; color: rgba(253,243,216,.35); border-color: rgba(244,233,206,.13); background: rgba(244,233,206,.03); }
+
+/* The same quiet button for the other background. Inside a modal the card is
+   cream, so --ghost's cream text would be invisible; this one is dark ink. */
+.nub-btn--outline {
+  background: rgba(42,27,16,.05);
+  color: var(--ink);
+  border: 1px solid var(--cream-border);
+  box-shadow: inset 0 1px rgba(255,255,255,.5);
+}
+.nub-btn--outline:hover:not(:disabled) { background: rgba(42,27,16,.11); border-color: #a98f5f; }
+.nub-btn--outline:disabled { opacity: 1; color: rgba(42,27,16,.32); border-color: rgba(199,174,126,.5); }
+
+/* ---------- the segmented control ---------- */
+
+/* One row of options with a green pill that slides between them. `--count` is
+   how many there are and `--pick` which is chosen; the pill's width and travel
+   are derived, so the same three rules drive a two-way and a four-way. */
+.nub-seg {
+  --seg-gap: 4px;
+  --seg-pad: 4px;
+  display: grid;
+  grid-template-columns: repeat(var(--count, 2), 1fr);
+  gap: var(--seg-gap);
+  padding: var(--seg-pad);
+  background: rgba(0,0,0,.07);
+  border-radius: 14px;
+  position: relative;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,.13);
+}
+.nub-seg::before {
+  content: "";
+  position: absolute;
+  top: var(--seg-pad);
+  bottom: var(--seg-pad);
+  left: var(--seg-pad);
+  width: calc((100% - 2 * var(--seg-pad) - (var(--count) - 1) * var(--seg-gap)) / var(--count));
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  transform: translateX(calc(var(--pick, 0) * (100% + var(--seg-gap))));
+  border-radius: 10px;
+  pointer-events: none;
+  transition: transform .36s var(--ease-pill);
+  box-shadow: 0 3px 8px rgba(52,196,111,.42), inset 0 1px rgba(255,255,255,.4);
+}
+.nub-seg__opt {
+  position: relative;
+  z-index: 1;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: center;
+  padding: 11px 10px;
+  border-radius: 10px;
+  font-family: var(--font-slab);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  transition: color .18s;
+}
+.nub-seg__opt:hover { color: var(--ink); }
+.nub-seg__opt.is-on { color: #fff; }
+
+/* ---------- the back pill ---------- */
+
+.nub-back {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top));
+  left: 18px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 20px 11px 16px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  cursor: pointer;
+  opacity: .5;
+  text-decoration: none;
+  transition: transform .16s var(--ease), background .16s, border-color .16s, opacity .16s;
+}
+.nub-back:hover { opacity: 1; background: rgba(0,0,0,.3); border-color: rgba(255,255,255,.28); transform: translateX(-2px); }
+.nub-back svg { width: 16px; height: 16px; fill: currentColor; }
+
+/* The same pill, sitting in a game header rather than floating over a lobby. */
+.nub-backpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px 9px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--cream-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  cursor: pointer;
+  opacity: .65;
+  transition: opacity .16s, background .16s, transform .16s var(--ease);
+}
+.nub-backpill:hover { opacity: 1; background: rgba(255,255,255,.12); transform: translateX(-2px); }
+.nub-backpill svg { width: 16px; height: 16px; fill: currentColor; }
+
+/* A phone header has room for the arrow or the word, not both — and three
+   icons on the right matter more than the label, which the arrow already says. */
+@media (max-width: 560px) {
+  .nub-backpill { padding: 9px 11px; gap: 0; }
+  .nub-backpill__label { display: none; }
+}
+
+/* ---------- icon buttons in a game header ---------- */
+
+.nub-icon {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--cream-text);
+  display: flex;
+  opacity: .72;
+  transition: opacity .16s, background .16s, transform .16s var(--ease);
+}
+.nub-icon:hover { opacity: 1; background: rgba(255,255,255,.12); transform: translateY(-1px); }
+.nub-icon svg { width: 22px; height: 22px; fill: currentColor; display: block; }
+
+/* ---------- modals ---------- */
+
+.nub-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgba(10,1,3,.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: nub-fade .18s ease;
+}
+.nub-modal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(88vh - var(--badge-safe));
+  overflow-y: auto;
+  /* Nudged up so a Share button at the foot of the card clears the badge. */
+  margin-bottom: var(--badge-safe);
+  animation: nub-rise .32s var(--ease);
+}
+.nub-modal h2 {
+  font-family: var(--font-slab);
+  font-size: 24px;
+  font-weight: 800;
+  text-align: center;
+  margin: 0 0 10px;
+}
+.nub-modal p { font-size: 14.5px; line-height: 1.55; margin: 10px 0; }
+.nub-modal hr { border: 0; border-top: 1px solid var(--cream-border); margin: 16px 0; opacity: .7; }
+.nub-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,.06);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 0;
+  color: var(--ink);
+  transition: background .16s;
+}
+.nub-modal__close:hover { background: rgba(0,0,0,.13); }
+.nub-modal__close svg { width: 20px; height: 20px; fill: currentColor; }
+
+/* The action that closes a long card has to be reachable without scrolling to
+   the end of it, or the button is no better than the X it replaced. Sticky,
+   with the card's own cream fading up behind it so text scrolls under cleanly.
+   The negative margins cancel .nub-card's padding so it spans the full width. */
+.nub-modal__cta {
+  position: sticky;
+  bottom: -22px;
+  margin: 18px -22px -22px;
+  padding: 14px 22px 22px;
+  background: linear-gradient(to bottom, rgba(244,233,206,0) 0%, var(--cream) 42%);
+}
+.nub-modal__cta .nub-btn { width: 100%; }
+
+@keyframes nub-fade { from { opacity: 0; } }
+@keyframes nub-rise { from { opacity: 0; transform: translateY(22px) scale(.98); } }
+
+/* ---------- toasts ---------- */
+
+.nub-toast {
+  background: linear-gradient(180deg, #2a0409, #1a0206);
+  color: var(--cream-text);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-family: var(--font-slab);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  text-align: center;
+  box-shadow: 0 12px 28px rgba(0,0,0,.55);
+  animation: nub-toast-in .26s var(--ease);
+}
+.nub-toast--out { animation: nub-toast-out .28s ease forwards; }
+@keyframes nub-toast-in  { from { opacity: 0; transform: translateY(-10px) scale(.96); } }
+@keyframes nub-toast-out { to { opacity: 0; transform: translateY(-6px) scale(.98); } }
+
+/* People who ask for less motion get the state changes without the travel. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
